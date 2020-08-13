@@ -39,7 +39,7 @@ int main (int argc, char** argv) {
         mem_addr = stoi(row[1]);
         reg_addr = stoi(row[2]);
 
-        // cout << "EEE  " << instruction << " " << mem_addr << " " << reg_addr << "\n";
+        // cout << "V  " << instruction << " " << mem_addr << " " << reg_addr << "\n";
         
         if (operation.isLoad(instruction)) { // if the instruction is load
         	registers.setValue(reg_addr, memory.getValue(mem_addr));
@@ -50,7 +50,6 @@ int main (int argc, char** argv) {
 
 	}
 
-	// cout << "A  " << memory.getValue(1234) << " " << memory.getValue(2345) << " " << memory.getValue(3) << endl;
 	for (int i=0; i < 32; i++) { // displaying the contents of the register
 		cout << "R" << i << ":  " << registers.getValue(i) << endl;
 	}
