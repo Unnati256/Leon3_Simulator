@@ -5,20 +5,14 @@
 #include <sstream>
 using namespace std;
 
-#include "Register.cpp"
-#include "Memory.cpp"
-#include "Operation.cpp"
+#include "../include/Register.h"
+#include "../include/Memory.h"
+#include "../include/Operation.h"
 
 int main (int argc, char** argv) {
 	Register registers;
 	Memory memory;
 	Operation operation;
-	for (int i=0; i < 32; i++) {	// assigning values to registers to check the program
-		registers.setValue(i, i);
-	}
-	for (int i=0; i < 16384; i++) {
-		memory.setValue(i, i);
-	}
 	
 	ifstream input_file;	// takes text file as input
 	input_file.open(argv[1]);
