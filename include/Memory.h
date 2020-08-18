@@ -1,9 +1,12 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
+#include <iostream>
+#include <string.h>
+
 class Memory {
 private:
-	int memory[16384];
+	std::string memory[16384];
 	
 public:
 	Memory();
