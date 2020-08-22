@@ -1,26 +1,32 @@
-COMPILER = g++
+CXX = g++
 EXECUTABLE = exec
+CXXFLAGS = -Wall
+
+INCDIR = include
+OBJDIR = bin
+SRCDIR = src
+
+SRC = Memory.cpp Register.cpp Operation.cpp
+OBJS = $(SRC:.cpp=.o)
+HEADER = $(SRC:.cpp=.h)
+
+$(EXECUTABLE) : Main.o $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $(EXECUTABLE) $(OBJDIR)/Main.o $(OBJDIR)/Memory.o $(OBJDIR)/Register.o $(OBJDIR)/Operation.o
+
+Main.o : $(SRCDIR)/Main.cpp
+	$(CXX) -c -o $(OBJDIR)/$@ $<
+
+%.o : $(SRCDIR)/%.cpp $(INCDIR)/%.h
+	$(CXX) -c -o $(OBJDIR)/$@ $<
 
 
-$(EXECUTABLE) : Main.o Memory.o Register.o Operation.o
-	$(COMPILER) -o $(EXECUTABLE) bin/Main.o bin/Memory.o bin/Register.o bin/Operation.o
-
-Main.o : src/Main.cpp
-	$(COMPILER) -c -o bin/Main.o src/Main.cpp
-
-Memory.o : src/Memory.cpp include/Memory.h
-	$(COMPILER) -c -o bin/Memory.o src/Memory.cpp
-
-Register.o : src/Register.cpp include/Register.h
-	$(COMPILER) -c -o bin/Register.o src/Register.cpp
-
-Operation.o : src/Operation.cpp include/Operation.h
-	$(COMPILER) -c -o bin/Operation.o src/Operation.cpp 
-
-.PHONEY : clean run
+.PHONEY : clean run debug
 
 clean:
-	rm bin/*.o $(EXECUTABLE)
+	rm $(OBJDIR)/*.o $(EXECUTABLE)
 
 run :
 	./$(EXECUTABLE) traces/trace_file1.txt
+
+debug: CXXFLAGS += -D DEBUG -g
+debug: $(EXECUTABLE)
