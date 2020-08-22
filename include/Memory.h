@@ -6,7 +6,7 @@
 
 class Memory {
 private:
-	std::string memory[16384];
+	unsigned char memory[16384];
 	
 public:
 	Memory();
