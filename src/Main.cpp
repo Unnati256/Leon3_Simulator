@@ -36,10 +36,10 @@ int main (int argc, char** argv) {
         // cout << "V  " << instruction << " " << mem_addr << " " << reg_addr << "\n";
         
         if (operation.isLoad(instruction)) { // if the instruction is load
-        	registers.setValue(reg_addr, memory.getValue(mem_addr));
+        	registers.setValue(reg_addr, memory.getWord(mem_addr));
         }
         if (operation.isStore(instruction)) { // if the instruction is store
-        	memory.setValue(mem_addr, registers.getValue(reg_addr));
+        	memory.setWord(mem_addr, registers.getValue(reg_addr));
         }
 
 	}
