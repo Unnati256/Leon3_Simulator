@@ -3,20 +3,12 @@
 
 #include <iostream>
 #include <string.h>
-<<<<<<< HEAD
 #include <fstream>
 
 class Memory {
 private:
 	std::fstream myFile;
 
-=======
-
-class Memory {
-private:
-	unsigned char memory[16384];
->>>>>>> 4ef1193d0ea3f085577dc6dac1efeadd42318499
-	
 public:
 	Memory();
 	

@@ -8,11 +8,13 @@ using namespace std;
 #include "../include/Register.h"
 #include "../include/Memory.h"
 #include "../include/Operation.h"
+#include "../include/MemoryCache.h"
 
 int main (int argc, char** argv) {
 	Register registers;
 	Memory memory;
 	Operation operation;
+	MemoryCache memoryCache;
 	
 	ifstream input_file;	// takes text file as input
 	input_file.open(argv[1]);
@@ -36,13 +38,14 @@ int main (int argc, char** argv) {
         // cout << "V  " << instruction << " " << mem_addr << " " << reg_addr << "\n";
         
         if (operation.isLoad(instruction)) { // if the instruction is load
-        	registers.setValue(reg_addr, memory.getWord(mem_addr));
+        	registers.setValue(reg_addr, memoryCache.getByte(mem_addr));
         }
         if (operation.isStore(instruction)) { // if the instruction is store
-        	memory.setWord(mem_addr, registers.getValue(reg_addr));
+        	memoryCache.setByte(mem_addr, registers.getValue(reg_addr));
         }
-
 	}
+
+	memoryCache.WriteBackToMem();
 
 	for (int i=0; i < 32; i++) { // displaying the contents of the register
 		cout << "R" << i << ":  " << registers.getValue(i) << endl;

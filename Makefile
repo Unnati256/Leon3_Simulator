@@ -6,12 +6,12 @@ INCDIR = include
 OBJDIR = bin
 SRCDIR = src
 
-SRC = Memory.cpp Register.cpp Operation.cpp
+SRC = Memory.cpp Register.cpp Operation.cpp MemoryCache.cpp
 OBJS = $(SRC:.cpp=.o)
 HEADER = $(SRC:.cpp=.h)
 
 $(EXECUTABLE) : Main.o $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $(EXECUTABLE) $(OBJDIR)/Main.o $(OBJDIR)/Memory.o $(OBJDIR)/Register.o $(OBJDIR)/Operation.o
+	$(CXX) $(CXXFLAGS) -o $(EXECUTABLE) $(OBJDIR)/Main.o $(OBJDIR)/Memory.o $(OBJDIR)/Register.o $(OBJDIR)/Operation.o $(OBJDIR)/MemoryCache.o
 
 Main.o : $(SRCDIR)/Main.cpp
 	$(CXX) -c -o $(OBJDIR)/$@ $<
