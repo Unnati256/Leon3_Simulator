@@ -16,13 +16,15 @@ MemoryCache::MemoryCache () {
 	last_used.resize(num_pages, -1);
 	tag.resize(num_pages, -1);
 	dirty.resize(num_pages, false);
+	count_hit = 0;
+	hit = false;
 
 	myFile.open("mem.bin", ios::in | ios::out | ios::binary); 
 }
 
 long MemoryCache::LRUReplacement () {
 	double min = 99999999999999;
-	int evict_index = -1;
+	long evict_index = -1;
 	for (unsigned int i = 0; i < num_pages; i++) {
 		if (last_used[i] < min) {
 			min = last_used[i];
@@ -32,10 +34,10 @@ long MemoryCache::LRUReplacement () {
 	return evict_index;
 } 
 
-int MemoryCache::HandleCacheMiss () {
-	int evict_index = -1;
+long MemoryCache::HandleCacheMiss () {
+	long evict_index = -1;
 	if (std::find(tag.begin(), tag.end(), -1) != tag.end()) { // if cache has space
-		std::vector<int>::iterator it; 
+		std::vector<long>::iterator it; 
 		it = std::find(tag.begin(), tag.end(), -1);
 		evict_index = std::distance(tag.begin(), it);
 		return evict_index;
@@ -61,7 +63,7 @@ void MemoryCache::WritePageToMem (int evict_index) {
 }
 
 
-void MemoryCache::WritePageToCache (int index, int cache_index) {
+void MemoryCache::WritePageToCache (int index, long cache_index) {
 	unsigned char temp[page_size];
 	long seek_addr = cache_index * page_size; // changed now
 	myFile.seekg(seek_addr, ios::beg);
@@ -74,13 +76,13 @@ void MemoryCache::WritePageToCache (int index, int cache_index) {
 	return;
 }
 
-int MemoryCache::FACache(long addr, int value, int instruction) {
-	int cache_index = addr / page_size;
-	int page_index = addr % page_size;
+char MemoryCache::FACache(long addr, int value, int instruction) {
+	long cache_index = addr / page_size;
+	long page_index = addr % page_size;
 	int evict_index; // index where page is to be brought
 
 	// searching the address in tag
-	bool hit = false;
+	hit = false;
 	for (unsigned int i = 0; i < num_pages; i++) {
 		if (tag[i] == cache_index) { // if cache hit
 			evict_index = i;
@@ -101,7 +103,7 @@ int MemoryCache::FACache(long addr, int value, int instruction) {
 
 	if (instruction == 0) { // for load instruction, update the last used
 		last_used[evict_index] = std::chrono::duration<double, std::milli> (std::chrono::high_resolution_clock::now() - start_time).count();
-		return int(cache[evict_index][page_index]);
+		return cache[evict_index][page_index];
 	}
 	else if (instruction == 1) { // for store instruction, update the last used value and dirty bit
 		cache[evict_index][page_index] = value;
@@ -111,14 +113,130 @@ int MemoryCache::FACache(long addr, int value, int instruction) {
 	}
 }
 
-int MemoryCache::getByte (int addr) {
-	int result = MemoryCache::FACache(addr, -1, 0);
+int MemoryCache::getByte (long addr) {
+	int result = (int)MemoryCache::FACache(addr, -1, 0);
+	if (hit) {
+		count_hit++;
+	}
 	return result;
 }
 
-void MemoryCache::setByte (int addr, int value) {
-	int result = MemoryCache::FACache (addr, value, 1);
+void MemoryCache::setByte (long addr, int value) {
+	int result = (int)MemoryCache::FACache (addr, value, 1);
+	if (hit) {
+		count_hit++;
+	}
 	return;
+}
+
+
+int MemoryCache::getHalfWord (long addr) {
+	unsigned char res[2];
+	bool is_hit[2];
+	res[0] = MemoryCache::FACache(addr, -1, 0);
+	is_hit[0] = hit;
+	res[1] = MemoryCache::FACache(addr + 1, -1, 0);
+	is_hit[1] = hit;
+	int result = res[1] | (res[0] << 8); 
+	CheckHit(is_hit, 2);
+	return result;
+}
+
+void MemoryCache::setHalfWord (long addr, int value) {
+	unsigned char res[2];
+	bool is_hit[2];
+    res[0] = (value >> 8) & 0xFF;
+    res[1] = value & 0xFF;
+	char result = MemoryCache::FACache (addr, (int)res[0], 1);
+	is_hit[0] = hit;
+	char result2 = MemoryCache::FACache (addr + 1, (int)res[1], 1);
+	is_hit[1] = hit;
+	CheckHit(is_hit, 2);
+	return;
+}
+
+int MemoryCache::getWord (long addr) {
+	unsigned char res[4];
+	bool is_hit[4];
+	for (int i = 0; i < 4; i++) {
+		res[i] = MemoryCache::FACache(addr + i, -1, 0);
+		is_hit[i] = hit;
+	}
+	int result = res[3] | (res[2] << 8) | (res[1] << 16) | (res[0] << 24);
+	CheckHit(is_hit, 4);
+	return result;
+}
+
+void MemoryCache::setWord (long addr, int value) {
+	unsigned char res[4];
+	bool is_hit[4];
+	res[0] = (value >> 24) & 0xFF;
+    res[1] = (value >> 16) & 0xFF;
+    res[2] = (value >> 8) & 0xFF;
+    res[3] = value & 0xFF;
+
+    for (int i = 0; i < 4; i++) {
+    	char result = MemoryCache::FACache (addr + i, (int)res[i], 1);
+		is_hit[i] = hit;
+    }
+	CheckHit(is_hit, 4);
+	return;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+long MemoryCache::getDoubleWord (long addr) {
+	unsigned char res[8];
+	bool is_hit[8];
+	// cout << "MEM::GET(LOAD)  " << addr << " ---- ";
+	for (int i = 0; i < 8; i++) {
+		res[i] = MemoryCache::FACache(addr + i, -1, 0);
+		is_hit[i] = hit;
+		// cout << int(res[i]) << " ";
+	}
+	long result = (long)res[7] | (long)res[6] << 8 | (long)res[5] << 16 | (long)res[4] << 24 | (long)res[3] << 32 | (long)res[2] << 40 | (long)res[1] << 48 | (long)res[0] << 56;
+	// cout << endl << result << endl << "-----" << endl;
+	CheckHit(is_hit, 8);
+	return result;
+}
+
+void MemoryCache::setDoubleWord (long addr, long value) {
+	unsigned char res[8];
+	bool is_hit[8];
+	// cout << "MEM::SET(STORE)  " << addr << " .. " << value << " ----- ";
+	res[0] = (value >> 56) & 0xFFFF;
+    res[1] = (value >> 48) & 0xFFFF;
+    res[2] = (value >> 40) & 0xFFFF;
+    res[3] = (value >> 32) & 0xFFFF;
+    res[4] = (value >> 24) & 0xFFFF;
+    res[5] = (value >> 16) & 0xFFFF;
+    res[6] = (value >> 8) & 0xFFFF;
+    res[7] = value & 0xFFFF;
+
+    for (int i = 0; i < 8; i++) {
+    	// cout << (int)res[i] << " ";
+    	char result = MemoryCache::FACache (addr + i, (int)res[i], 1);
+		is_hit[i] = hit;
+    }
+    // cout << endl;
+	CheckHit(is_hit, 8);
+	return;
+}
+/////////////////////////////////////////////////////////////////////////////////////////
+
+void MemoryCache::CheckHit (bool is_hit[], int size) {
+	bool temp = true;
+	for (int i = 0; i < size; i++) {
+		temp = temp && is_hit[i];
+	}
+	if (temp) count_hit++;
+}
+
+int MemoryCache::GetHits () {
+	return count_hit;
+}
+
+double MemoryCache::FindTimeTaken () {
+	return std::chrono::duration<double, std::milli> (std::chrono::high_resolution_clock::now() - start_time).count();
 }
 
 void MemoryCache::WriteBackToMem () { // write all the dirty pages back to the file at the end
