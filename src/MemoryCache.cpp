@@ -6,7 +6,7 @@
 using namespace std;
 
 MemoryCache::MemoryCache () {
-	cache_size = 262144; // 256K
+	cache_size = 131072; // 128K
 	page_size = 4096; // 4K
 	num_pages = cache_size / page_size;
 	start_time = std::chrono::high_resolution_clock::now();	
@@ -56,7 +56,7 @@ void MemoryCache::WritePageToMem (int evict_index) {
 	long seek_add = tag[evict_index] * page_size;
 	for (int i = 0; i < page_size; i++) {
     	myFile.seekp(seek_add, ios::beg);
-    	myFile.write(reinterpret_cast< char *>(&temp[i]), sizeof(temp[0]));
+    	myFile.write((char*)(&temp[i]), sizeof(temp[0]));
     	seek_add++;
     }
     dirty[evict_index] = false;
@@ -67,16 +67,16 @@ void MemoryCache::WritePageToCache (int index, long cache_index) {
 	unsigned char temp[page_size];
 	long seek_addr = cache_index * page_size; // changed now
 	myFile.seekg(seek_addr, ios::beg);
-	myFile.read(reinterpret_cast< char *>(temp), sizeof(temp));
+	myFile.read((char *)(temp), sizeof(temp));
 	for (int i = 0; i < page_size; i++) {
-		cache[index][i] = temp[i];
+		cache[index][i] = reinterpret_cast<unsigned char&>(temp[i]);
 	}
 	tag[index] = cache_index;
 	dirty[index] = false;
 	return;
 }
 
-char MemoryCache::FACache(long addr, int value, int instruction) {
+unsigned char MemoryCache::FACache(long addr, int value, int instruction) {
 	long cache_index = addr / page_size;
 	long page_index = addr % page_size;
 	int evict_index; // index where page is to be brought
@@ -183,18 +183,14 @@ void MemoryCache::setWord (long addr, int value) {
 	return;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
 long MemoryCache::getDoubleWord (long addr) {
 	unsigned char res[8];
 	bool is_hit[8];
-	// cout << "MEM::GET(LOAD)  " << addr << " ---- ";
 	for (int i = 0; i < 8; i++) {
 		res[i] = MemoryCache::FACache(addr + i, -1, 0);
 		is_hit[i] = hit;
-		// cout << int(res[i]) << " ";
 	}
 	long result = (long)res[7] | (long)res[6] << 8 | (long)res[5] << 16 | (long)res[4] << 24 | (long)res[3] << 32 | (long)res[2] << 40 | (long)res[1] << 48 | (long)res[0] << 56;
-	// cout << endl << result << endl << "-----" << endl;
 	CheckHit(is_hit, 8);
 	return result;
 }
@@ -202,7 +198,6 @@ long MemoryCache::getDoubleWord (long addr) {
 void MemoryCache::setDoubleWord (long addr, long value) {
 	unsigned char res[8];
 	bool is_hit[8];
-	// cout << "MEM::SET(STORE)  " << addr << " .. " << value << " ----- ";
 	res[0] = (value >> 56) & 0xFFFF;
     res[1] = (value >> 48) & 0xFFFF;
     res[2] = (value >> 40) & 0xFFFF;
@@ -213,15 +208,12 @@ void MemoryCache::setDoubleWord (long addr, long value) {
     res[7] = value & 0xFFFF;
 
     for (int i = 0; i < 8; i++) {
-    	// cout << (int)res[i] << " ";
     	char result = MemoryCache::FACache (addr + i, (int)res[i], 1);
 		is_hit[i] = hit;
     }
-    // cout << endl;
 	CheckHit(is_hit, 8);
 	return;
 }
-/////////////////////////////////////////////////////////////////////////////////////////
 
 void MemoryCache::CheckHit (bool is_hit[], int size) {
 	bool temp = true;
@@ -231,7 +223,7 @@ void MemoryCache::CheckHit (bool is_hit[], int size) {
 	if (temp) count_hit++;
 }
 
-int MemoryCache::GetHits () {
+long MemoryCache::GetHits () {
 	return count_hit;
 }
 

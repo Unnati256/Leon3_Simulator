@@ -23,7 +23,7 @@ private:
 
 public:
 	MemoryCache();
-	char FACache (long addr, int value, int instruction);
+	unsigned char FACache (long addr, int value, int instruction);
 	long LRUReplacement ();
 	long HandleCacheMiss ();
 	void WritePageToMem (int evict_index);
@@ -38,7 +38,7 @@ public:
 	long getDoubleWord (long addr);
 	void setDoubleWord (long addr, long value);
 	
-	int GetHits ();
+	long GetHits ();
 	double FindTimeTaken ();
 	void CheckHit (bool is_hit[], int size);
 	void WriteBackToMem ();
