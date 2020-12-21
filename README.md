@@ -2,7 +2,7 @@
 
 <h2> A cycle accurate Leon3 simulator in C++ </h2>
 
-The project at present, is a simple model of the main memory and registers. The model consists of a total of 32 word-addressable registers, and a byte-addressable  memory of size 2^14 (the required size is 2^32. The changes will be done in the course of development).
+The project at present, is a simple model of the main memory and registers. The model consists of a total of 32 word-addressable registers, and a byte-addressable  memory of size 2^32.
 
 The inputs to the program are text files (in the "traces" folder), which contain 4 comma-separated columns- the first column contains 0 for load and 1 for store, the second column contains the program counter address, the third ccolumn tells about the number of bytes requested from the memory, and the fouth column contains the address of the memory the data is to be fetched from. Consider a file containing the following 3 lines:<br>
 0,0x428562,0x8,0x424360<br>
