@@ -6,19 +6,18 @@ INCDIR = include
 OBJDIR = bin
 SRCDIR = src
 
-SRC = Memory.cpp Register.cpp Operation.cpp MemoryCache.cpp
+SRC = Register.cpp Operation.cpp MemoryCache.cpp
 OBJS = $(SRC:.cpp=.o)
 HEADER = $(SRC:.cpp=.h)
 
 $(EXECUTABLE) : Main.o $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $(EXECUTABLE) $(OBJDIR)/Main.o $(OBJDIR)/Memory.o $(OBJDIR)/Register.o $(OBJDIR)/Operation.o $(OBJDIR)/MemoryCache.o
+	$(CXX) $(CXXFLAGS) -o $(EXECUTABLE) $(OBJDIR)/Main.o $(OBJDIR)/Register.o $(OBJDIR)/Operation.o $(OBJDIR)/MemoryCache.o
 
 Main.o : $(SRCDIR)/Main.cpp
 	$(CXX) -std=c++11 -c -o $(OBJDIR)/$@ $<
 
-%.o : $(SRCDIR)/%.cpp $(INCDIR)/%.h
+%.o : $(SRCDIR)/%.cpp $(INCDIR)/%.h 
 	$(CXX) -std=c++11 -c -o $(OBJDIR)/$@ $<
-
 
 .PHONEY : clean run debug
 

@@ -6,13 +6,11 @@
 using namespace std;
 
 #include "../include/Register.h"
-#include "../include/Memory.h"
 #include "../include/Operation.h"
 #include "../include/MemoryCache.h"
 
 int main (int argc, char** argv) {
 	Register registers;
-	Memory memory;
 	Operation operation;
 	MemoryCache memoryCache;
 	

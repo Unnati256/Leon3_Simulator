@@ -3,11 +3,23 @@
 #include<vector>
 #include <algorithm>
 #include "../include/MemoryCache.h"
+// #include "../include/config.xml"
+
+#include "../include/tinyxml2/tinyxml2.cpp"
+
 using namespace std;
+using namespace tinyxml2;
 
 MemoryCache::MemoryCache () {
-	cache_size = 131072; // 128K
-	page_size = 4096; // 4K
+	XMLDocument doc;
+    doc.LoadFile( "config.xml" );
+	const char* title = doc.FirstChildElement( "MemoryCache" )->FirstChildElement( "CacheSize" )->GetText();
+    cache_size = atol(title);
+
+    XMLText* textNode = doc.LastChildElement( "MemoryCache" )->LastChildElement( "PageSize" )->FirstChild()->ToText();
+    title = textNode->Value();
+    page_size = atol(title);
+	
 	num_pages = cache_size / page_size;
 	start_time = std::chrono::high_resolution_clock::now();	
 	cache.resize(num_pages, vector<unsigned char>(page_size, 0));

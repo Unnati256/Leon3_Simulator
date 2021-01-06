@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--The cache and page sizes are in bytes-->
+<MemoryCache>
+	<CacheSize>131072</CacheSize>
+	<PageSize>4096</PageSize>
+</MemoryCache>
