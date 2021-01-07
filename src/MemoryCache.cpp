@@ -2,24 +2,45 @@
 #include <chrono>
 #include<vector>
 #include <algorithm>
+#include <fstream>
+#include <sstream>
+#include <string>
 #include "../include/MemoryCache.h"
-// #include "../include/config.xml"
-
-#include "../include/tinyxml2/tinyxml2.cpp"
 
 using namespace std;
-using namespace tinyxml2;
 
+long xmlReader(string start, string end){
+    
+    ifstream l_file;
+    l_file.open("config.xml");
+    
+    string l_xmlEntry;
+    string data;
+    
+    while (l_file >> l_xmlEntry) {
+        data += l_xmlEntry;
+    }
+
+    if(data.find(start) != -1){
+        
+        size_t pos = data.find(start);
+        size_t pos1 = data.find(end);
+        if (pos != std::string::npos && pos1 != std::string::npos)
+        {
+            l_xmlEntry = data.substr(pos + start.length(), pos1 - pos - start.length());
+        }
+        // else {
+        //     perror("Invalid xml file!");
+        // }
+        long value = stol(l_xmlEntry);
+        return value;
+    }
+    
+}
 MemoryCache::MemoryCache () {
-	XMLDocument doc;
-    doc.LoadFile( "config.xml" );
-	const char* title = doc.FirstChildElement( "MemoryCache" )->FirstChildElement( "CacheSize" )->GetText();
-    cache_size = atol(title);
+	cache_size = xmlReader ("<CacheSize>", "</CacheSize>");
+	page_size = xmlReader ("<PageSize>", "</PageSize>");
 
-    XMLText* textNode = doc.LastChildElement( "MemoryCache" )->LastChildElement( "PageSize" )->FirstChild()->ToText();
-    title = textNode->Value();
-    page_size = atol(title);
-	
 	num_pages = cache_size / page_size;
 	start_time = std::chrono::high_resolution_clock::now();	
 	cache.resize(num_pages, vector<unsigned char>(page_size, 0));
